@@ -1,0 +1,119 @@
+"""Machine-learning risk model for the Heart Disease cohort.
+
+Lineage: scikit-learn `Pipeline` + scaling discipline is adapted from
+Project 3 (Machine Learning, UCI Online Retail II K-Means RFM). The
+implementation here is a fresh supervised binary classifier on tabular
+clinical features.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+
+import joblib
+import numpy as np
+import pandas as pd
+from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.metrics import (
+    average_precision_score,
+    brier_score_loss,
+    roc_auc_score,
+)
+from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.pipeline import Pipeline
+
+from .config import settings
+from .preprocessing import RANDOM_STATE, SplitData, build_preprocessor
+
+MODEL_PATH = settings.models_dir / "ml_model.joblib"
+
+
+@dataclass
+class MLMetrics:
+    cv_roc_auc_mean: float
+    cv_roc_auc_std: float
+    test_roc_auc: float
+    test_pr_auc: float
+    test_brier: float
+
+
+def build_model() -> Pipeline:
+    return Pipeline(
+        steps=[
+            ("preprocess", build_preprocessor()),
+            (
+                "clf",
+                HistGradientBoostingClassifier(
+                    max_iter=300,
+                    learning_rate=0.05,
+                    max_depth=None,
+                    random_state=RANDOM_STATE,
+                ),
+            ),
+        ]
+    )
+
+
+def train_and_evaluate(split: SplitData, n_splits: int = 5) -> tuple[Pipeline, MLMetrics]:
+    model = build_model()
+
+    cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=RANDOM_STATE)
+    cv_scores = cross_val_score(
+        model, split.X_train, split.y_train, scoring="roc_auc", cv=cv
+    )
+
+    model.fit(split.X_train, split.y_train)
+    probs = model.predict_proba(split.X_test)[:, 1]
+
+    metrics = MLMetrics(
+        cv_roc_auc_mean=float(cv_scores.mean()),
+        cv_roc_auc_std=float(cv_scores.std()),
+        test_roc_auc=float(roc_auc_score(split.y_test, probs)),
+        test_pr_auc=float(average_precision_score(split.y_test, probs)),
+        test_brier=float(brier_score_loss(split.y_test, probs)),
+    )
+    return model, metrics
+
+
+def save(model: Pipeline, path: Path = MODEL_PATH) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    joblib.dump(model, path)
+    return path
+
+
+def load(path: Path = MODEL_PATH) -> Pipeline:
+    return joblib.load(path)
+
+
+def predict_proba(model: Pipeline, X: pd.DataFrame) -> np.ndarray:
+    return model.predict_proba(X)[:, 1]
+
+
+def slice_metrics(
+    model: Pipeline, X: pd.DataFrame, y: pd.Series, slice_col: str
+) -> pd.DataFrame:
+    """Per-slice ROC-AUC + positive rate.
+
+    Lineage: per-slice disaggregated evaluation is adapted from Project 4
+    (Deep Learning, Fashion-MNIST CNN with dropout), where the headline
+    accuracy hid large per-class differences. Here we apply the same
+    discipline across clinical sub-cohorts (e.g. by sex or age band).
+    """
+    probs = predict_proba(model, X)
+    rows = []
+    for value, idx in X.groupby(slice_col).groups.items():
+        idx = list(idx)
+        y_slice = y.loc[idx]
+        if y_slice.nunique() < 2 or len(y_slice) < 10:
+            auc = float("nan")
+        else:
+            auc = float(roc_auc_score(y_slice, probs[X.index.get_indexer(idx)]))
+        rows.append(
+            {
+                slice_col: value,
+                "n": len(idx),
+                "positive_rate": float(y_slice.mean()),
+                "roc_auc": auc,
+            }
+        )
+    return pd.DataFrame(rows)
