@@ -45,6 +45,10 @@ models/*
 # Vector store
 chroma_db/
 
+# Run outputs (logs, per-run transcripts)
+outputs/*
+!outputs/.gitkeep
+
 # Logs
 *.log
 logs/
