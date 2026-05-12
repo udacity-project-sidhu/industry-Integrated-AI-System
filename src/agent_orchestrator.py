@@ -51,7 +51,7 @@ from .rag.retriever import search
 from .rag.vector_store import RetrievedChunk
 from .safeguards import CAPS, RUBRIC, is_refused
 
-RUN_LOG = Path("outputs/run_log.jsonl")
+RUN_LOG = settings.project_root / "outputs" / "run_log.jsonl"
 EVALUATOR_SYSTEM_PROMPT = """You evaluate a clinical-triage explanation against a rubric.
 
 Return a single JSON object with keys:
