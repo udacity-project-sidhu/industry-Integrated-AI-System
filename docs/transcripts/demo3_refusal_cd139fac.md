@@ -1,7 +1,7 @@
 # Run transcript - demo3_refusal
 
-- run_id: `aabd2325`
-- timestamp: 2026-05-12T03:39:26.170011Z
+- run_id: `cd139fac`
+- timestamp: 2026-05-12T14:58:30.731720Z
 - refused: `True`
 - refusal_reason: matched refusal substring: prescribe
 - revised: `False`
