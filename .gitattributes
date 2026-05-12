@@ -4,3 +4,5 @@
 *.png binary
 *.jpg binary
 *.jpeg binary
+*.sqlite3 binary
+*.bin binary

@@ -32,22 +32,22 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Data (do not commit datasets)
-data/raw/*
-data/processed/*
-!data/raw/.gitkeep
-!data/processed/.gitkeep
+# Data (committed for reproducibility - small UCI dataset)
+# data/raw/*
+# data/processed/*
+# !data/raw/.gitkeep
+# !data/processed/.gitkeep
 
-# Trained model artifacts
-models/*
-!models/.gitkeep
+# Trained model artifacts (committed - deterministic seed=42, ~400 KB)
+# models/*
+# !models/.gitkeep
 
-# Vector store
-chroma_db/
+# Vector store (committed - ~1.2 MB, regenerable via run_all.py)
+# chroma_db/
 
-# Run outputs (logs, per-run transcripts)
-outputs/*
-!outputs/.gitkeep
+# Run outputs (committed - audit trail evidence)
+# outputs/*
+# !outputs/.gitkeep
 
 # Logs
 *.log

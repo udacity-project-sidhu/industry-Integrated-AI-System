@@ -97,5 +97,3 @@ The integrated system meets the rubric's letter — five prior projects integrat
 - National Institute of Standards and Technology. (2023). *Artificial Intelligence Risk Management Framework (AI RMF 1.0)* (NIST AI 100-1). U.S. Department of Commerce.
 - Roth, G. A., Mensah, G. A., Johnson, C. O., Addolorato, G., Ammirati, E., Baddour, L. M., … Fuster, V. (2020). Global burden of cardiovascular diseases and risk factors, 1990–2019: Update from the GBD 2019 study. *Journal of the American College of Cardiology*, 76(25), 2982–3021. https://doi.org/10.1016/j.jacc.2020.11.010
 - World Health Organization. (2021). *Cardiovascular diseases (CVDs) — fact sheet.* https://www.who.int/news-room/fact-sheets/detail/cardiovascular-diseases-(cvds)
-
-*Word count target: 1,500–2,000 words. This document: ~1,915 words including references (~1,620 body excluding the integration table and references).*
