@@ -1,48 +1,40 @@
-# Integrative Industry Synthesis — Clinical Triage & Risk Decision Support
+# Integrative Industry Synthesis - Clinical Triage and Risk Decision Support
 
 Industry-focused AI system that integrates classical ML, deep learning, RAG, generative AI, and an agentic orchestrator for cardiovascular risk triage and clinician-facing explanation.
 
-> Educational artifact only. Not for clinical use. Uses public, de-identified UCI data.
+> **Educational artifact only. Not for clinical use.** Uses public, de-identified UCI data (Janosi et al., 1988).
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    A[Patient record<br/>UCI Heart Disease] --> B[Preprocessing]
-    B --> C[ML Risk Model<br/>Gradient Boosting]
-    B --> D[DL Risk Model<br/>MLP / PyTorch]
-    C --> E[Ensemble / Decision]
-    D --> E
-    E --> F[Agent Orchestrator]
-    F --> G[RAG Retriever<br/>ChromaDB]
-    G --> H[GenAI Explainer<br/>OpenAI LLM + citations]
-    H --> I[Clinician + Patient<br/>Explanation Output]
-    F -. guardrails .-> I
-```
+![Architecture](docs/architecture.png)
+
+The same diagram is also embedded in `notebooks/05_integrated_pipeline.ipynb` (mermaid, renders on GitHub) and described in prose in `docs/Reflective_Synthesis_Paper.md` sections 2-3.
 
 ## Prior-project domains integrated
 
-| # | Domain | Component |
+| Prior project | Concept reused | Where it lives |
 |---|---|---|
-| 1 | Data + Classical ML | Tabular risk classifier |
-| 2 | Deep Learning | PyTorch MLP scorer |
-| 3 | Generative AI + RAG | LLM explainer grounded in retrieved evidence |
-| 4 | Agentic AI | Orchestrator with refusal/guardrail logic |
+| **P2** Data and statistics | IDA discipline, chi-square / Cramer's V, limitations framing | `notebooks/01_data_exploration.ipynb` |
+| **P3** Machine learning | sklearn `Pipeline` + `ColumnTransformer`, `log1p` | `src/preprocessing.py`, `src/ml_model.py` |
+| **P4** Deep learning | Fixed-seed PyTorch loop, dropout, per-slice eval | `src/dl_model.py`, `src/evaluation.py` |
+| **P5** Generative AI | Responsible-framing of generative output, mandatory disclaimer | `src/genai_explainer.py` |
+| **P6** Agentic AI | plan -> retrieve -> explain -> evaluate -> revise loop, refusal list, run log | `src/rag/`, `src/agent_orchestrator.py`, `src/safeguards.py` |
 
 ## Folder layout
 
 ```
 Intgerated AI Systems/
 ├── data/                  # raw + processed datasets (gitignored)
-├── knowledge_base/        # source docs for RAG
+├── knowledge_base/        # source markdown for RAG
 ├── models/                # trained model artifacts (gitignored)
-├── notebooks/             # exploration + integrated pipeline
-├── src/                   # library code
-│   ├── rag/
-│   └── ...
-├── tests/                 # smoke tests
-├── diagrams/              # exported architecture images
-├── docs/                  # synthesis paper + presentation outline
+├── notebooks/             # 5 numbered notebooks, all executed in-place
+├── src/                   # library code (rag/, models, orchestrator, ...)
+├── tests/                 # smoke tests (17 pass, incl. 3 live API)
+├── docs/                  # synthesis paper (md + PDF), presentation outline,
+│                          # architecture.png, transcripts/, integration_map.md
+├── outputs/               # run_log.jsonl (gitignored, append-only)
+├── chroma_db/             # vector store (gitignored)
+├── run_all.py             # single-file end-to-end orchestrator
 ├── requirements.txt
 └── .env.example
 ```
@@ -51,16 +43,97 @@ Intgerated AI Systems/
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r "Intgerated AI Systems/requirements.txt"
+.\.venv\Scripts\python.exe -m pip install -r "Intgerated AI Systems/requirements.txt"
 Copy-Item "Intgerated AI Systems/.env.example" "Intgerated AI Systems/.env"
 # edit .env and set OPENAI_API_KEY
 ```
 
-## Run
+## Reproduce - one command
 
-End-to-end demo notebook: `notebooks/05_integrated_pipeline.ipynb`.
+```powershell
+cd "Intgerated AI Systems"
+python run_all.py                # full end-to-end (~3 min, ~9-12 OpenAI calls)
+python run_all.py --skip-train   # reuse models on disk
+python run_all.py --skip-demo    # skip live agent demos (no API calls)
+```
+
+The script runs in dependency order:
+1. Load + cache UCI Heart Disease
+2. Train (or reuse) ML and DL models
+3. Idempotent KB ingest into ChromaDB
+4. Score the held-out test cohort
+5. Aggregate + per-slice evaluation
+6. Three live agent demos -> markdown transcripts in `docs/transcripts/`
+
+## Reproduce - notebook-by-notebook
+
+If you prefer to walk through individual notebooks (recommended for the mentor defense):
+
+| Order | Notebook | Purpose |
+|---|---|---|
+| 1 | `notebooks/01_data_exploration.ipynb` | IDA, chi-square / Cramer's V, dataset limitations |
+| 2 | `notebooks/02_ml_risk_model.ipynb` | ML training + ROC/PR + per-slice metrics |
+| 3 | `notebooks/03_dl_risk_model.ipynb` | DL training + curves + per-slice metrics |
+| 4 | `notebooks/04_evaluation.ipynb` | Aggregate metrics, slice tables, RAG faithfulness, failure cases |
+| 5 | `notebooks/05_integrated_pipeline.ipynb` | End-to-end demo, three live agent runs, persisted transcripts |
+
+Notebooks 04 and 05 require model artifacts on disk; run 02 and 03 first if `models/` is empty.
+
+## Tests
+
+```powershell
+python -m tests.test_evaluation         # unit tests, fast, no API
+python -m tests.test_genai_explainer    # live API, ~1 OpenAI call
+python -m tests.test_agent_orchestrator # live API, ~3 OpenAI calls
+# ... etc.
+```
+
+All 17 tests pass with the venv pinned in `requirements.txt`.
+
+## Re-run resilience
+
+The pipeline is **safe to re-run**:
+
+| Component | Behaviour on re-run |
+|---|---|
+| `data_loader.load_heart_disease` | Cached to `data/raw/heart_disease.csv` after first download. Idempotent. |
+| `ml_model.save` / `dl_model.save` | Overwrite the same artifact. Training is deterministic (seed=42), so re-runs produce identical artifacts. |
+| `rag.retriever.ingest()` | Idempotent via sha256 manifest at `chroma_db/ingest_manifest.json`. Only re-embeds files whose content changed. Returns `{changed_files: [], chunks_added: 0}` on a clean re-run. Use `ingest(force=True)` to wipe and rebuild. |
+| `agent_orchestrator.run` | Each call generates a fresh `run_id` (uuid). `outputs/run_log.jsonl` is **append-only**. `docs/transcripts/{label}_{run_id}.md` produces a new file per run; previous transcripts are preserved. |
+
+### How to differentiate runs
+
+Every run carries two distinguishing fields:
+
+- **`run_id`** - 8-char uuid prefix (e.g. `3fe8154e`). Appears in:
+  - the transcript filename: `docs/transcripts/demo1_happy_path_3fe8154e.md`
+  - every record in `outputs/run_log.jsonl`
+  - the `Run transcript` header inside the markdown
+- **`ts`** - ISO 8601 timestamp on every event in `run_log.jsonl`, and a `timestamp` field at the top of each transcript
+
+To find the latest run:
+
+```powershell
+# newest transcripts
+Get-ChildItem docs/transcripts -Filter "demo*.md" | Sort-Object LastWriteTime -Descending | Select-Object -First 6
+
+# events for a specific run_id from the log
+python -c "import json; [print(json.dumps(r, indent=2)) for r in (json.loads(l) for l in open('outputs/run_log.jsonl', encoding='utf-8')) if r.get('run_id') == '3fe8154e']"
+```
+
+If transcripts pile up over many runs, you can safely delete `docs/transcripts/demo*.md` between runs - they are regenerated on the next `run_all.py` invocation. The `.gitkeep` file preserves the directory.
+
+## Deliverables for Project 7 submission
+
+| Required by rubric | Where |
+|---|---|
+| Integrated industry artifact | `notebooks/05_integrated_pipeline.ipynb`, `run_all.py`, all of `src/` |
+| Reflective Synthesis Paper (PDF, 1,500-2,000 words) | [`docs/Reflective_Synthesis_Paper.pdf`](docs/Reflective_Synthesis_Paper.pdf) |
+| Architecture diagram | [`docs/architecture.png`](docs/architecture.png) (also rendered inline in `notebooks/05_integrated_pipeline.ipynb`) |
+| Supporting code, notebooks, diagrams | `src/`, `notebooks/`, `tests/`, `docs/` |
+| `requirements.txt` (from `pip freeze`) | `requirements.txt` |
+| Mentor presentation script | [`docs/presentation_outline.md`](docs/presentation_outline.md) |
 
 ## Author
 
-Naunihal Singh Sidhu — nssidhu@yahoo.com
+Naunihal Singh Sidhu - nssidhu@yahoo.com
