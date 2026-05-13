@@ -48,22 +48,58 @@ Copy-Item "Intgerated AI Systems/.env.example" "Intgerated AI Systems/.env"
 # edit .env and set OPENAI_API_KEY
 ```
 
+> **Install caveat — do NOT use `pip install --quiet -r requirements.txt`.** With `--quiet`, pip silently dropped ~38 of the 172 pinned packages (including `chromadb`) during testing on a fresh venv, and the pipeline failed with `ModuleNotFoundError: No module named 'chromadb'`. Re-running the same command **without** `--quiet` installs all 172 cleanly in one shot and `pip check` reports no issues. If you see import errors after install, simply re-run `pip install -r requirements.txt` without flags.
+
 ## Reproduce - one command
 
 ```powershell
 cd "Intgerated AI Systems"
-python run_all.py                # full end-to-end (~3 min, ~9-12 OpenAI calls)
-python run_all.py --skip-train   # reuse models on disk
-python run_all.py --skip-demo    # skip live agent demos (no API calls)
+python run_all.py                            # full end-to-end (~3 min, ~9-12 OpenAI calls)
+python run_all.py --skip-train               # reuse models on disk (still runs demos)
+python run_all.py --skip-demo                # skip live agent demos (no API calls)
+python run_all.py --skip-train --skip-demo   # fastest dry-run, ~15 s, no API
 ```
 
-The script runs in dependency order:
-1. Load + cache UCI Heart Disease
-2. Train (or reuse) ML and DL models
-3. Idempotent KB ingest into ChromaDB
-4. Score the held-out test cohort
-5. Aggregate + per-slice evaluation
-6. Three live agent demos -> markdown transcripts in `docs/transcripts/`
+### What each step does and when it is reused
+
+`run_all.py` runs six steps in dependency order. Each step is independently re-entrant; the table below shows what is executed vs. reused under each flag combination, and where you can visually inspect what each step produced.
+
+| # | Step | What it does | Outputs (visually inspect these) | Default | `--skip-train` | `--skip-demo` | both flags |
+|---|---|---|---|---|---|---|---|
+| 1 | Load UCI Heart Disease | Downloads on first run; reads cached CSV on later runs | `data/raw/heart_disease.csv` | execute (cached) | execute (cached) | execute (cached) | execute (cached) |
+| 2 | Train ML + DL | `HistGradientBoostingClassifier` 5-fold CV; PyTorch MLP 80 epochs | `models/ml_model.joblib`, `models/dl_model.pt`, `models/dl_model_meta.pt` | **train** | **reuse from disk** | **train** | **reuse from disk** |
+| 3 | KB ingest into ChromaDB | sha256 manifest; only re-embeds changed files. Default no-op returns `chunks_added=0` | `chroma_db/chroma.sqlite3`, `chroma_db/<uuid>/{data_level0,header,length,link_lists}.bin`, `chroma_db/ingest_manifest.json` | execute (idempotent) | execute (idempotent) | execute (idempotent) | execute (idempotent) |
+| 4 | Score test cohort | Ensembles ML + DL probabilities; assigns tier (low/moderate/high); flags low-confidence rows | printed to stdout (tier counts); per-row scoring is in-memory, surfaced inside demo transcripts | execute | execute | execute | execute |
+| 5 | Aggregate metrics | ROC-AUC, PR-AUC, Brier, per-sex slice table for both models | printed to stdout; also re-rendered in `notebooks/04_evaluation.ipynb` | execute | execute | execute | execute |
+| 6 | Three live agent demos | `happy_path`, `low_confidence`, `refusal` — calls OpenAI live | `docs/transcripts/{label}_{run_id}.md` (3 new files per run) and appended events in `outputs/run_log.jsonl` | **execute (~9 API calls)** | **execute (~9 API calls)** | **skip** | **skip** |
+
+**Quick visual inspection cheat-sheet:**
+
+```powershell
+# Latest model artifacts (sizes confirm training happened)
+Get-ChildItem models -Filter "*.joblib","*.pt" | Format-Table Name, Length, LastWriteTime
+
+# Most recent transcripts (3 newest = the just-completed run)
+Get-ChildItem docs/transcripts -Filter "demo*.md" | Sort-Object LastWriteTime -Descending | Select-Object -First 6 Name, LastWriteTime
+
+# Tail the append-only run log
+Get-Content outputs/run_log.jsonl -Tail 20
+
+# Vector store state
+Get-ChildItem chroma_db -Recurse -File | Format-Table FullName, Length
+
+# Cached dataset
+Get-Item data/raw/heart_disease.csv | Select-Object Name, Length, LastWriteTime
+```
+
+**Timing (approx., on commit `7233b15`):**
+
+| Mode | Wall time | OpenAI calls | Use case |
+|---|---|---|---|
+| `python run_all.py` | ~3 min | ~9-12 | Full reproduction from scratch |
+| `python run_all.py --skip-train` | ~50 s | ~9-12 | Quick re-verification with committed models |
+| `python run_all.py --skip-demo` | ~3 min | 0 | Train models, no API spend |
+| `python run_all.py --skip-train --skip-demo` | ~15 s | 0 | Smoke test, no API, no training |
 
 ## Reproduce - notebook-by-notebook
 
