@@ -141,8 +141,8 @@ The pipeline is **safe to re-run**:
 
 Every run carries two distinguishing fields:
 
-- **`run_id`** - 8-char uuid prefix (e.g. `3fe8154e`). Appears in:
-  - the transcript filename: `docs/transcripts/demo1_happy_path_3fe8154e.md`
+- **`run_id`** - 8-char uuid prefix (e.g. `bc5f8f21`). Appears in:
+  - the transcript filename: `docs/transcripts/demo1_happy_path_bc5f8f21.md`
   - every record in `outputs/run_log.jsonl`
   - the `Run transcript` header inside the markdown
 - **`ts`** - ISO 8601 timestamp on every event in `run_log.jsonl`, and a `timestamp` field at the top of each transcript
