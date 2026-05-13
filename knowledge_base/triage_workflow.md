@@ -7,9 +7,9 @@ Guidance retrieved by the agent at explanation time. Defines the structure of a 
 A clinician-facing summary should contain, in order:
 
 1. **One-line risk tier** with the ensemble probability and the threshold used (e.g. "Moderate risk: ensemble probability 0.42, tiered against low<0.30 / high≥0.70").
-2. **Model agreement** — note whether the ML and DL scorers agree (within 0.20). If they disagree, state that the explanation is low-confidence and the case should be escalated.
+2. **Model agreement** — note whether the ML (Machine Learning) and DL (Deep Learning) scorers agree (within 0.20). If they disagree, state that the explanation is low-confidence and the case should be escalated.
 3. **Top contributing factors** — three to five features from the patient record that align with documented cardiovascular risk factors (see `risk_factors.md`). Each factor must cite the feature dictionary.
-4. **What this system does not know** — explicit list of variables absent from the dataset (smoking status, family history, medications, BMI, HbA1c, LDL/HDL fractions, symptom acuity).
+4. **What this system does not know** — explicit list of variables absent from the dataset (smoking status, family history, medications, BMI (Body Mass Index), HbA1c (glycated hemoglobin), LDL (low-density lipoprotein) / HDL (high-density lipoprotein) fractions, symptom acuity).
 5. **Disclaimer** — "Educational artifact only. Not for clinical use. The clinician is the locus of accountability."
 
 ## Refusal cases

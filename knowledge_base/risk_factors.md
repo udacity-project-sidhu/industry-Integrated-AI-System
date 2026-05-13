@@ -4,9 +4,9 @@ Concise, citation-bearing notes used by the agent to ground patient explanations
 
 ## Major modifiable risk factors
 
-- **Hypertension.** Persistently elevated systolic blood pressure (>140 mm Hg) is the single largest contributor to global cardiovascular mortality. Lowering systolic BP by 10 mm Hg reduces major cardiovascular events by roughly 20% (Ettehad et al., 2016, *Lancet*).
-- **Dyslipidemia.** Elevated LDL cholesterol drives atherogenesis. Statin therapy reduces LDL by 30–50% and lowers major vascular events by approximately 22% per 1 mmol/L LDL reduction (CTT Collaboration, 2010, *Lancet*).
-- **Diabetes / hyperglycemia.** Diabetes roughly doubles cardiovascular risk independently of other factors (Sarwar et al., 2010, *Lancet*). Fasting blood sugar > 120 mg/dl is a screening flag.
+- **Hypertension.** Persistently elevated systolic blood pressure (>140 mm Hg — millimeters of mercury) is the single largest contributor to global cardiovascular mortality. Lowering systolic BP (blood pressure) by 10 mm Hg reduces major cardiovascular events by roughly 20% (Ettehad et al., 2016, *Lancet*).
+- **Dyslipidemia.** Elevated LDL (low-density lipoprotein) cholesterol drives atherogenesis. Statin therapy reduces LDL by 30–50% and lowers major vascular events by approximately 22% per 1 mmol/L LDL reduction (CTT (Cholesterol Treatment Trialists') Collaboration, 2010, *Lancet*).
+- **Diabetes / hyperglycemia.** Diabetes roughly doubles cardiovascular risk independently of other factors (Sarwar et al., 2010, *Lancet*). Fasting blood sugar > 120 mg/dl (milligrams per deciliter) is a screening flag.
 - **Smoking.** Doubles the risk of coronary events; risk declines toward baseline within 5–10 years of cessation. Not recorded in the UCI Heart Disease dataset — an important data gap.
 - **Sedentary behaviour.** Lower exercise capacity (peak `thalach` below 85% of age-predicted maximum) is independently associated with cardiovascular mortality (Ross et al., 2016, *Circulation*).
 
@@ -26,7 +26,7 @@ Concise, citation-bearing notes used by the agent to ground patient explanations
 
 ## What this system does *not* know
 
-- Family history, smoking status, BMI, HbA1c, LDL/HDL fractions, medication history.
+- Family history, smoking status, BMI (Body Mass Index), HbA1c (glycated hemoglobin), LDL (low-density lipoprotein) / HDL (high-density lipoprotein) fractions, medication history.
 - Symptom acuity (chest pain at rest? new-onset? worsening?).
 - Imaging beyond fluoroscopy vessel count.
 - Patient preferences, social context, access to follow-up care.

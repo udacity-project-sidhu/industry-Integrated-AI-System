@@ -1,4 +1,4 @@
-# UCI Heart Disease — Feature Dictionary
+# UCI (University of California, Irvine) Heart Disease — Feature Dictionary
 
 Clinical meaning of each feature used by the risk-scoring models. This document is part of the knowledge base retrieved by the agent at explanation time, so values cited in patient-facing summaries can be traced back here.
 
@@ -19,21 +19,21 @@ Clinical meaning of each feature used by the risk-scoring models. This document 
 
 ## Vital signs and labs
 
-- **trestbps — resting blood pressure** (mm Hg, measured on hospital admission). Chronic hypertension (>140/90) damages endothelium and accelerates atherosclerosis.
-- **chol — serum cholesterol** (mg/dl). Total cholesterol; LDL fraction is more directly atherogenic but is not separately recorded in this dataset.
+- **trestbps — resting blood pressure** (mm Hg — millimeters of mercury, measured on hospital admission). Chronic hypertension (>140/90) damages endothelium and accelerates atherosclerosis.
+- **chol — serum cholesterol** (mg/dl — milligrams per deciliter). Total cholesterol; LDL (low-density lipoprotein) fraction is more directly atherogenic but is not separately recorded in this dataset.
 - **fbs — fasting blood sugar > 120 mg/dl** (1 = true). A surrogate for diabetes/pre-diabetes, which roughly doubles cardiovascular risk.
 
-## Resting ECG
+## Resting ECG (electrocardiogram)
 
 - **restecg — resting electrocardiographic results**
   - 0 = normal
   - 1 = ST-T wave abnormality (T-wave inversions or ST elevation/depression > 0.05 mV)
-  - 2 = probable or definite left-ventricular hypertrophy by Estes' criteria
+  - 2 = probable or definite left-ventricular hypertrophy (LVH) by Estes' criteria
   LVH and persistent ST-T changes reflect chronic hemodynamic stress on the heart.
 
 ## Stress test
 
-- **thalach — maximum heart rate achieved during exercise** (bpm). Lower peak heart rate (especially below 85% of age-predicted maximum) suggests reduced functional capacity or chronotropic incompetence.
+- **thalach — maximum heart rate achieved during exercise** (bpm — beats per minute). Lower peak heart rate (especially below 85% of age-predicted maximum) suggests reduced functional capacity or chronotropic incompetence.
 - **oldpeak — ST depression induced by exercise relative to rest** (mm). Larger ST depression at peak exercise is a classic marker of inducible ischemia.
 - **slope — slope of the peak exercise ST segment**
   - 1 = upsloping (relatively benign)
