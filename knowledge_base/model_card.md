@@ -4,7 +4,7 @@ This card describes the ML (Machine Learning) and DL (Deep Learning) components 
 
 ## Intended use
 
-- **Primary use:** educational artifact for the Udacity AI Mastery Capstone (Project 7).
+- **Primary use:** educational artifact for the Udacity AI Mastery Capstone (Integrated AI System).
 - **Out of scope:** clinical decision-making, diagnosis, treatment recommendation, triage routing in production, any patient-facing deployment.
 - **Audience:** course mentors, reviewers, and the author.
 

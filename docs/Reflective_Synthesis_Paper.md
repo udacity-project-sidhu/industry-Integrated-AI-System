@@ -1,6 +1,6 @@
 # Reflective Synthesis Paper
 
-**Project 7 — Industry-Integrated AI System**
+**Integrated AI System — Industry-Integrated AI System**
 **Author:** Naunihal Singh Sidhu
 **Capstone integrative artifact (educational only — not for clinical use).**
 
@@ -10,7 +10,7 @@
 
 Cardiovascular disease (CVD) remains the leading global cause of death, accounting for roughly 17.9 million deaths a year and almost a third of all deaths worldwide (World Health Organization, 2021). A large fraction of these events are downstream of a small set of modifiable risk factors — chiefly hypertension, dyslipidaemia, smoking, diabetes and obesity — and a large fraction occur in patients who *did* enter the healthcare system but were not triaged with the urgency their underlying risk warranted (Roth et al., 2020). The bottleneck is not raw clinical knowledge; the bottleneck is bedside cognitive bandwidth. Clinicians at the front door of a hospital see hundreds of patients a shift, and the cost of mis-prioritising a single one is asymmetric: a missed acute coronary case is catastrophic, while a low-risk patient over-investigated is merely inefficient.
 
-This is the context in which I situated my Project 7 capstone. The opportunity for an AI system here is not to replace clinical judgement — that is neither legal nor ethical — but to surface a structured, evidence-grounded summary of risk that a human clinician can accept, reject, or interrogate within seconds. The system I built is a clinical-triage explainer that takes a single patient's tabular features, returns a calibrated probability, retrieves supporting evidence from a small clinical knowledge base, and produces a citation-bearing English explanation under explicit guardrails.
+This is the context in which I situated my Integrated AI System capstone. The opportunity for an AI system here is not to replace clinical judgement — that is neither legal nor ethical — but to surface a structured, evidence-grounded summary of risk that a human clinician can accept, reject, or interrogate within seconds. The system I built is a clinical-triage explainer that takes a single patient's tabular features, returns a calibrated probability, retrieves supporting evidence from a small clinical knowledge base, and produces a citation-bearing English explanation under explicit guardrails.
 
 ## 2. Overview of the integrated solution
 
@@ -26,7 +26,7 @@ End-to-end behaviour is demonstrated in `notebooks/05_integrated_pipeline.ipynb`
 
 ## 3. Integration of prior projects
 
-The rubric for Project 7 requires integration of at least three prior capstones — concepts and patterns, not copy-pasted code. I rebuilt every component from scratch and used five prior projects as design lineage rather than as code donors.
+The rubric for the Integrated AI System capstone requires integration of at least three prior capstones — concepts and patterns, not copy-pasted code. I rebuilt every component from scratch and used five prior projects as design lineage rather than as code donors.
 
 | Prior project | Concept reused | Where it lives in this system |
 |---|---|---|

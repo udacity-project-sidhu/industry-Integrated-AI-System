@@ -159,7 +159,7 @@ python -c "import json; [print(json.dumps(r, indent=2)) for r in (json.loads(l) 
 
 If transcripts pile up over many runs, you can safely delete `docs/transcripts/demo*.md` between runs - they are regenerated on the next `run_all.py` invocation. The `.gitkeep` file preserves the directory.
 
-## Deliverables for Project 7 submission
+## Deliverables for Integrated AI System submission
 
 | Required by rubric | Where |
 |---|---|

@@ -1,6 +1,6 @@
 # Mentor Defense - Presentation Outline
 
-**Project 7 - Industry-Integrated AI System**
+**Integrated AI System — Industry-Integrated AI System**
 **Format:** ~15 minutes talk + 10 minutes Q&A
 **Audience:** Capstone mentor / employer-facing reviewer
 **Companion artifact:** `docs/Reflective_Synthesis_Paper.pdf`
@@ -10,7 +10,7 @@ This outline is a roadmap for a live walkthrough; the verifiable evidence lives 
 ---
 
 ## Slide 1 - Title (30 s)
-- Project 7: Clinical-triage explainer for cardiovascular risk
+- Integrated AI System: Clinical-triage explainer for cardiovascular risk
 - One-line framing: "Industry-grade AI inside a regulated workflow needs auditability, citations, refusal-before-LLM, and a logged audit trail - not a single brilliant model."
 - Disclaimer: educational artifact, not for clinical use.
 
