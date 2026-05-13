@@ -24,7 +24,7 @@ The same diagram is also embedded in `notebooks/05_integrated_pipeline.ipynb` (m
 
 ```
 Intgerated AI Systems/
-├── data/                  # raw + processed datasets (gitignored)
+├── data/                  # UCI heart disease dataset (committed)
 ├── knowledge_base/        # source markdown for RAG
 ├── models/                # trained model artifacts (gitignored)
 ├── notebooks/             # 5 numbered notebooks, all executed in-place

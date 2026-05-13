@@ -34,9 +34,7 @@ Thumbs.db
 
 # Data (committed for reproducibility - small UCI dataset)
 # data/raw/*
-# data/processed/*
 # !data/raw/.gitkeep
-# !data/processed/.gitkeep
 
 # Trained model artifacts (committed - deterministic seed=42, ~400 KB)
 # models/*
