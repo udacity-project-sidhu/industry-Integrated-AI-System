@@ -65,6 +65,9 @@ def _hard_split(text: str, max_chars: int) -> list[str]:
 
 
 def chunk_markdown(text: str, source: str, max_chars: int = 1500) -> list[Chunk]:
+    # 1500 chars ~ 350-450 tokens: small enough to fit several chunks in the
+    # LLM context window alongside the patient block, large enough to keep a
+    # full guideline section intact in one chunk.
     chunks: list[Chunk] = []
     for heading, body in _split_by_headings(text):
         for piece in _hard_split(body, max_chars):

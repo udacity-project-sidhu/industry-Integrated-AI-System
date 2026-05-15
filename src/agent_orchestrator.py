@@ -230,6 +230,8 @@ def run(
         raise RuntimeError("OPENAI_API_KEY is not set.")
     client = OpenAI(api_key=settings.openai_api_key)
 
+    # Drop low-similarity chunks before citing: <0.25 cosine is usually off-topic
+    # noise that would tempt the LLM into ungrounded claims.
     usable = [c for c in chunks if c.similarity >= 0.25]
     evidence_block = _evidence_block(usable)
     patient_block = _patient_block(features, patient_score)

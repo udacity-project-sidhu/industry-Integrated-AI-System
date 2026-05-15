@@ -30,6 +30,8 @@ META_PATH = settings.models_dir / "dl_model_meta.pt"
 
 
 def set_seed(seed: int = RANDOM_STATE) -> None:
+    # Seed every RNG the training loop touches: Python `random` for shuffles,
+    # NumPy for tensor init helpers, and PyTorch for layer init + dropout.
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)

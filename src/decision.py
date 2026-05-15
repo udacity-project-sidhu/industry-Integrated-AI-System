@@ -20,8 +20,12 @@ from . import dl_model, ml_model
 from .preprocessing import SplitData
 
 # Default tier thresholds on the ensemble probability of disease.
+# 0.30 / 0.70 give a wide "moderate" middle band so borderline cases are
+# routed to human review rather than auto-classified low or high.
 DEFAULT_LOW_THRESHOLD = 0.30
 DEFAULT_HIGH_THRESHOLD = 0.70
+# |ml_prob - dl_prob| <= 0.20 = the two scorers agree within 20 percentage
+# points; anything wider is flagged low-confidence to the clinician.
 DEFAULT_AGREEMENT_TOLERANCE = 0.20
 
 

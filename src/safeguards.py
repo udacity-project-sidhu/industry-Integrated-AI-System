@@ -32,6 +32,8 @@ REFUSAL_SUBSTRINGS: tuple[str, ...] = (
 
 @dataclass(frozen=True)
 class RuntimeCaps:
+    # Hard ceilings to bound cost and prevent runaway agent loops:
+    # at most 4 RAG calls and 1 revise pass per user request.
     max_retrieval_calls: int = 4
     max_revisions: int = 1
     retrieval_k: int = 4
