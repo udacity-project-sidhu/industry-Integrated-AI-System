@@ -1,6 +1,6 @@
 # Reflective Synthesis Paper
 
-**Integrated AI System — Industry-Integrated AI System**
+**Integrative Industry Synthesis — Clinical Triage and Risk Decision Support**
 **Author:** Naunihal Singh Sidhu
 **Capstone integrative artifact (educational only — not for clinical use).**
 
@@ -19,7 +19,7 @@ The system runs end-to-end as follows:
 1. A patient row from the UCI Heart Disease dataset (Janosi et al., 1988) is preprocessed (numeric `log1p` + `StandardScaler`, categorical one-hot).
 2. Two independent classifiers — a scikit-learn `HistGradientBoostingClassifier` and a PyTorch MLP — each return a probability of CVD.
 3. An ensemble decision layer averages the two probabilities into a tier (`low`/`moderate`/`high`) and flags `confidence=low` when the two models disagree by more than 0.20.
-4. An agent orchestrator implements a plan → retrieve → explain → evaluate → revise loop. It first checks the user request against a refusal substring list, then retrieves the top-k evidence chunks from a Chroma vector store of clinician-authored markdown, then asks an OpenAI chat model to draft an explanation grounded *only* in those chunks. A second LLM call acts as evaluator/critic against an explicit rubric; if the draft fails, one bounded revision is permitted.
+4. An agent orchestrator implements a plan → retrieve → explain → evaluate → revise loop. It first checks the user request against a refusal substring list, then retrieves the top-k evidence chunks from a ChromaDB vector store of clinician-authored markdown, then asks an OpenAI chat model to draft an explanation grounded *only* in those chunks. A second LLM call acts as evaluator/critic against an explicit rubric; if the draft fails, one bounded revision is permitted.
 5. Every event of every run is appended to `outputs/run_log.jsonl`, and a human-readable transcript is persisted to `docs/transcripts/`.
 
 End-to-end behaviour is demonstrated in `notebooks/05_integrated_pipeline.ipynb` and quantitatively evaluated in `notebooks/04_evaluation.ipynb`.
@@ -34,7 +34,7 @@ The rubric for the Integrated AI System capstone requires integration of at leas
 | **P3 — Machine Learning (RFM clustering)** | scikit-learn `Pipeline` + `ColumnTransformer`; `log1p` for skewed numerics; per-slice metric reporting | `src/preprocessing.py`, `src/ml_model.py` |
 | **P4 — Deep Learning (CNN with dropout)** | Fixed-seed PyTorch training loop, dropout regularisation, *disaggregated* per-slice evaluation rather than headline accuracy | `src/dl_model.py`, slice tables in `src/evaluation.py` |
 | **P5 — Generative AI (VAE)** | Responsible-framing of generative output: under-claim capability, structural mitigations baked into the prompt, mandatory disclaimer as the final line | `src/genai_explainer.py` |
-| **P6 — Agentic AI (research-brief agent)** | Plan → retrieve → synthesise → evaluate → revise loop; Chroma + OpenAI embeddings; INSUFFICIENT EVIDENCE escape valve; substring refusal list; runtime caps; sha256 ingest manifest; JSONL run log | `src/rag/`, `src/agent_orchestrator.py`, `src/safeguards.py` |
+| **P6 — Agentic AI (research-brief agent)** | Plan → retrieve → synthesise → evaluate → revise loop; ChromaDB + OpenAI embeddings; INSUFFICIENT EVIDENCE escape valve; substring refusal list; runtime caps; sha256 ingest manifest; JSONL run log | `src/rag/`, `src/agent_orchestrator.py`, `src/safeguards.py` |
 
 Critically, the integration is not stylistic; the same per-sex performance gap that appeared in both ML and DL is acknowledged in the model card retrieved at explanation time, so the disclosure surfaces in the actual explanation a clinician would read.
 

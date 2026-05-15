@@ -41,6 +41,8 @@ Intgerated AI Systems/
 
 ## Setup
 
+**Requires Python 3.9 or newer** (tested on 3.11). Pinned dependencies in `requirements.txt` rely on numpy 2.x and torch 2.x, which do not support Python 3.8 or earlier.
+
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r "Intgerated AI Systems/requirements.txt"

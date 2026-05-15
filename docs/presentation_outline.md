@@ -1,6 +1,6 @@
 # Mentor Defense - Presentation Outline
 
-**Integrated AI System — Industry-Integrated AI System**
+**Integrative Industry Synthesis — Clinical Triage and Risk Decision Support**
 **Format:** ~15 minutes talk + 10 minutes Q&A
 **Audience:** Capstone mentor / employer-facing reviewer
 **Companion artifact:** `docs/Reflective_Synthesis_Paper.pdf`
