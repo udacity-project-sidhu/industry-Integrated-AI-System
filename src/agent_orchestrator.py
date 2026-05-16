@@ -160,13 +160,16 @@ def run(
     dl_net,
     preprocessor,
     chat_model: str | None = None,
+    evaluator_model: str | None = None,
 ) -> RunResult:
     """End-to-end run: refusal check -> retrieve -> score -> explain -> evaluate -> (revise)."""
     run_id = uuid.uuid4().hex[:8]
     events: list[dict] = []
     model_name = chat_model or settings.chat_model
+    # Judge uses a different snapshot so it is not literally evaluating its own text.
+    evaluator_name = evaluator_model or settings.evaluator_model
 
-    _log(events, run_id, "request", {"user_request": user_request, "n_features_rows": len(features)})
+    _log(events, run_id, "request", {"user_request": user_request, "n_features_rows": len(features), "explainer_model": model_name, "evaluator_model": evaluator_name})
 
     refused, reason = is_refused(user_request)
     if refused:
@@ -236,7 +239,8 @@ def run(
     evidence_block = _evidence_block(usable)
     patient_block = _patient_block(features, patient_score)
 
-    verdict = _evaluator_call(client, model_name, expl.text, evidence_block, patient_block)
+    verdict = _evaluator_call(client, evaluator_name, expl.text, evidence_block, patient_block)
+    verdict.setdefault("evaluator_model", evaluator_name)
     _log(events, run_id, "evaluation", verdict)
 
     revised = False

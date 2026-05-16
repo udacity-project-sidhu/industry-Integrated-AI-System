@@ -15,6 +15,9 @@ load_dotenv(PROJECT_ROOT / ".env")
 class Settings:
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
     chat_model: str = os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini")
+    # Evaluator runs on a different snapshot than the explainer so the
+    # rubric judge cannot trivially rubber-stamp its own generations.
+    evaluator_model: str = os.getenv("OPENAI_EVALUATOR_MODEL", "gpt-4o")
     embedding_model: str = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
 
     project_root: Path = PROJECT_ROOT
