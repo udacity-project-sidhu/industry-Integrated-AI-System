@@ -1,4 +1,4 @@
-# Integrative Industry Synthesis - Clinical Triage and Risk Decision Support
+# Integrative Industry Synthesis — Clinical Triage and Risk Decision Support
 
 Industry-focused AI system that integrates classical ML, deep learning, RAG, generative AI, and an agentic orchestrator for cardiovascular risk triage and clinician-facing explanation.
 
