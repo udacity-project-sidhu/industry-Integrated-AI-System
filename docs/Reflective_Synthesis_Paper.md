@@ -65,7 +65,7 @@ These map directly onto the NIST AI Risk Management Framework's "govern / map / 
 
 ## 6. Limitations and risks
 
-- **Dataset.** UCI Heart Disease is small (303 rows), thirty years old, drawn from four hospitals, and skewed male. Headline metrics on a 61-row test set have wide confidence intervals; I have not bootstrapped them. The system therefore has no claim to clinical validity outside this benchmark.
+- **Dataset.** UCI Heart Disease is small (303 rows), thirty years old, drawn from four hospitals, and skewed male. Headline metrics on the 61-row test set are reported with 95% bootstrap CIs (1000 resamples) in nb04 alongside a plain LogisticRegression baseline, and the bands are wide enough that the gradient-boosting model overlaps the baseline. The system therefore has no claim to clinical validity outside this benchmark.
 - **Calibration.** The Brier scores are good (≤0.09) but the top failure-case analysis showed both models being most confident exactly when they were wrong on a handful of rows. The ensemble disagreement flag is the only structural mitigation.
 - **Generative drift.** The LLM is a closed-weights API; OpenAI can change the underlying weights at any time. The mitigation is the evaluator-critic, not the LLM itself, but the evaluator is also an LLM and shares the failure mode.
 - **Adversarial input.** The refusal list is a substring check; an adversarial user can paraphrase past it. The mitigation is that the system is gated behind a clinician — it is not deployed to patients directly — but in a real deployment a stronger classifier-based input filter would be required.
