@@ -170,7 +170,7 @@ If transcripts pile up over many runs, you can safely delete `docs/transcripts/d
 | Architecture diagram | [`docs/architecture.png`](docs/architecture.png) (also rendered inline in `notebooks/05_integrated_pipeline.ipynb`) |
 | Supporting code, notebooks, diagrams | `src/`, `notebooks/`, `tests/`, `docs/` |
 | `requirements.txt` (from `pip freeze`) | `requirements.txt` |
-| Mentor presentation script | [`docs/presentation_outline.md`](docs/presentation_outline.md) |
+| Mentor presentation script | [`docs/presentation_outline.md`](docs/presentation_outline.md) ([PDF](docs/presentation_outline.pdf)) |
 
 ## Author
 

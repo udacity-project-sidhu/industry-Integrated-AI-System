@@ -1,23 +1,28 @@
-"""Render docs/Reflective_Synthesis_Paper.md to PDF.
+"""Render a markdown doc to PDF.
 
 Pure-Python pipeline (markdown -> HTML -> PDF via xhtml2pdf) so no native
 binaries are required. Run from project root:
 
-    python scripts/render_paper.py
+    python scripts/render_paper.py                      # renders the synthesis paper
+    python scripts/render_paper.py presentation_outline # renders the presentation deck
 
 Dependencies (install temporarily, not pinned in requirements.txt):
     pip install markdown xhtml2pdf
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import markdown
 from xhtml2pdf import pisa
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC = ROOT / "docs" / "Reflective_Synthesis_Paper.md"
-DST = ROOT / "docs" / "Reflective_Synthesis_Paper.pdf"
+
+TARGETS = {
+    "paper": ("Reflective_Synthesis_Paper.md", "Reflective_Synthesis_Paper.pdf"),
+    "presentation_outline": ("presentation_outline.md", "presentation_outline.pdf"),
+}
 
 CSS = """
 @page { size: letter; margin: 0.9in 0.8in; }
@@ -35,15 +40,25 @@ hr { border: none; border-top: 1px solid #888; }
 """
 
 
-def main() -> None:
-    md_text = SRC.read_text(encoding="utf-8")
+def render(target: str) -> None:
+    src_name, dst_name = TARGETS[target]
+    src = ROOT / "docs" / src_name
+    dst = ROOT / "docs" / dst_name
+    md_text = src.read_text(encoding="utf-8")
     html_body = markdown.markdown(md_text, extensions=["tables", "fenced_code"])
     html = f"<html><head><style>{CSS}</style></head><body>{html_body}</body></html>"
-    with DST.open("wb") as f:
+    with dst.open("wb") as f:
         result = pisa.CreatePDF(html, dest=f, encoding="utf-8")
     if result.err:
         raise SystemExit(f"PDF render failed with {result.err} errors")
-    print(f"Wrote {DST} ({DST.stat().st_size} bytes)")
+    print(f"Wrote {dst} ({dst.stat().st_size} bytes)")
+
+
+def main() -> None:
+    target = sys.argv[1] if len(sys.argv) > 1 else "paper"
+    if target not in TARGETS:
+        raise SystemExit(f"Unknown target {target!r}; choose from {list(TARGETS)}")
+    render(target)
 
 
 if __name__ == "__main__":
