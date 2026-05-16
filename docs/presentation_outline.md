@@ -11,7 +11,7 @@ This outline is a roadmap for a live walkthrough; the verifiable evidence lives 
 
 ## Slide 1 - Title (30 s)
 - Integrated AI System: Clinical-triage explainer for cardiovascular risk
-- One-line framing: "Industry-grade AI inside a regulated workflow needs auditability, citations, refusal-before-LLM, and a logged audit trail - not a single brilliant model."
+- One-line framing: "Industry-pattern AI inside a regulated workflow needs auditability, citations, refusal-before-LLM, and a logged audit trail - not a single brilliant model."
 - Disclaimer: educational artifact, not for clinical use.
 
 ## Slide 2 - The problem (1 min)
