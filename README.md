@@ -121,6 +121,7 @@ Notebooks 04 and 05 require model artifacts on disk; run 02 and 03 first if `mod
 
 ```powershell
 python -m tests.test_evaluation         # unit tests, fast, no API
+python -m tests.test_safeguards         # refusal list / runtime caps / rubric, no API
 python -m tests.test_genai_explainer    # live API, ~1 OpenAI call
 python -m tests.test_agent_orchestrator # live API, ~3 OpenAI calls
 # ... etc.

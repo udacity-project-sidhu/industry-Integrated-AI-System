@@ -8,7 +8,7 @@
 
 ## 1. Industry context
 
-Cardiovascular disease (CVD) remains the leading global cause of death, accounting for roughly 17.9 million deaths a year and almost a third of all deaths worldwide (World Health Organization, 2021). A large fraction of these events are downstream of a small set of modifiable risk factors — hypertension, dyslipidaemia, smoking, diabetes, obesity — and a large fraction occur in patients who *did* enter the healthcare system but were not triaged with the urgency their underlying risk warranted (Roth et al., 2020). The bottleneck is not raw clinical knowledge; it is bedside cognitive bandwidth. Clinicians at the front door of a hospital see hundreds of patients a shift, and the cost of mis-prioritising one is asymmetric: a missed acute coronary case is catastrophic, an over-investigated low-risk patient is merely inefficient.
+Cardiovascular disease (CVD) remains the leading global cause of death, accounting for roughly 17.9 million deaths a year and almost a third of all deaths worldwide (World Health Organization, 2021). A large fraction of these events are downstream of a small set of modifiable risk factors — hypertension, dyslipidaemia, smoking, diabetes, obesity — whose population-level contribution is documented in the Global Burden of Disease analysis (Roth et al., 2020). Many also occur in patients who enter the healthcare system but are not triaged with the urgency their underlying risk warrants. The bottleneck is not raw clinical knowledge; it is bedside cognitive bandwidth. Clinicians at the front door of a hospital see hundreds of patients a shift, and the cost of mis-prioritising one is asymmetric: a missed acute coronary case is catastrophic, an over-investigated low-risk patient is merely inefficient.
 
 This is the context in which I situated my Integrated AI System capstone. The opportunity here is not to replace clinical judgement (neither legal nor ethical) but to surface a structured, evidence-grounded summary of risk a clinician can accept, reject, or interrogate within seconds. The system is a clinical-triage explainer that takes a single patient's tabular features, returns a calibrated probability, retrieves supporting evidence from a small clinical knowledge base, and produces a citation-bearing English explanation under explicit guardrails.
 
@@ -40,26 +40,26 @@ Critically, the integration is not stylistic; the same per-sex performance gap t
 
 ## 4. Technical design decisions and tradeoffs
 
-**Two models, not one.** A single classifier would have been simpler. I deliberately ensembled an HGB and an MLP because the disagreement signal between two architecturally different learners is itself information: when both heads agree, the prediction is structurally more trustworthy than either alone; when they disagree, the system surfaces "human review recommended" instead of pretending the average is meaningful. On the held-out test set the two models tied almost exactly (ROC-AUC 0.960 each), but their per-row probabilities differ enough to make the disagreement flag fire on real borderline patients (demo 2 in `notebooks/05_integrated_pipeline.ipynb`).
+**Two models, not one.** A single classifier would have been simpler. I ensembled an HGB and an MLP because the disagreement signal between two architecturally different learners is itself information: when both heads agree, the prediction is structurally more trustworthy than either alone; when they disagree, the system surfaces "human review recommended" instead of pretending the average is meaningful. The two models tied almost exactly on the held-out test (ROC-AUC 0.960 each), but their per-row probabilities differ enough for the disagreement flag to fire on borderline patients (demo 2 in `notebooks/05_integrated_pipeline.ipynb`).
 
-**RAG over fine-tuning.** Fine-tuning a model on cardiology text would have been more impressive on paper and far less defensible in practice — fine-tuned weights cannot be audited, cannot be revised without retraining, and cannot cite their sources. RAG against a small markdown knowledge base lets clinicians edit a single file and have the change take effect on the next call, with sha256-based idempotent re-ingest (`src/rag/manifest.py`).
+**RAG over fine-tuning.** Fine-tuning on cardiology text would have been more impressive on paper and far less defensible in practice — fine-tuned weights cannot be audited, cannot be revised without retraining, and cannot cite their sources. RAG against a small markdown knowledge base lets clinicians edit a single file and have the change take effect on the next call, with sha256-based idempotent re-ingest (`src/rag/manifest.py`).
 
 **Evaluator-critic, not just a single LLM call.** A second LLM call evaluates the draft against an explicit rubric (`src/safeguards.py:RUBRIC`) and returns structured JSON. In the integrated demo it caught real issues — missing inline citations, low-confidence not surfaced explicitly — and the bounded one-shot revision corrected them (visible in demo 2's transcript). The evaluator is not a guarantee of safety, but it is a measurable second line of defence whose verdict is logged.
 
 **Structural refusal before the LLM, not just in the prompt.** The substring refusal list (`prescribe`, `dosage`, `diagnose me`, `legal advice`, …) short-circuits the pipeline before any expensive call. A prompt-only safety policy can be jailbroken; a hardcoded substring check on the user request cannot. Demo 3 demonstrates this with `refused=True` and `events=[request, refusal]` — no model call was made.
 
-**Tradeoffs accepted.** The substring list will refuse legitimate paraphrases (false-positive rate >0). The evaluator is itself an LLM and can mis-score. The KB is tiny (four markdown files, 29 chunks). The dataset is small (n=303, test n=61). Each of these is an honest engineering tradeoff documented in the model card and limitations sections rather than glossed over.
+**Tradeoffs accepted.** The substring list refuses legitimate paraphrases (false-positive rate >0). The evaluator is itself an LLM and can mis-score. The KB is tiny (four files, 29 chunks). The dataset is small (n=303, test n=61). Each is documented in the model card and limitations.
 
 ## 5. Ethical, governance, and responsible-AI considerations
 
 The system has been built end-to-end with explicit, *structural* mitigations rather than prompt-level pleas. A short audit:
 
-- **Scope refusal at the input layer.** Banned request types never reach the LLM, regardless of phrasing nuance.
-- **Citation discipline at the output layer.** The explanation prompt enforces five hard rules including verbatim score quoting and `[S?]` citations to the retrieved evidence. The Phase J faithfulness check across three live runs found *zero invalid citations* and 36–44% explanation/evidence token overlap.
+- **Scope refusal at the input layer.** Banned request types never reach the LLM, regardless of phrasing.
+- **Citation discipline at the output layer.** The explanation prompt enforces five hard rules including verbatim score quoting and `[S?]` citations to retrieved evidence. The Phase J faithfulness check across three live runs found *zero invalid citations* and 36–44% explanation/evidence token overlap.
 - **Mandatory disclaimer.** Every non-refusal explanation ends with "Educational artifact only. Not for clinical use. The clinician is the locus of accountability for any decision."
 - **Confidence surfacing.** When ML and DL disagree, the explanation explicitly recommends human review.
 - **Audit trail.** Every step of every run is persisted to `outputs/run_log.jsonl` and to a human-readable transcript.
-- **Disaggregated evaluation, disclosed.** The per-sex AUC gap (sex=0 → 1.00, sex=1 → 0.94 for ML; very similar for DL) is reported in `notebooks/04_evaluation.ipynb` and surfaced in the retrieved model card — a clinician asking the system about a female patient sees the model card text.
+- **Disaggregated evaluation, disclosed.** The per-sex AUC gap (sex=0 → 1.00, sex=1 → 0.94 for ML; similar for DL) is reported in `notebooks/04_evaluation.ipynb` and surfaced in the retrieved model card.
 
 These map directly onto the NIST AI Risk Management Framework's "govern / map / measure / manage" function categories (NIST, 2023) and onto the "transparency", "accountability" and "human oversight" requirements that the EU AI Act classifies as load-bearing for high-risk medical use cases (European Parliament, 2024).
 
@@ -70,15 +70,16 @@ These map directly onto the NIST AI Risk Management Framework's "govern / map / 
 - **Generative drift.** The LLM is a closed-weights API; OpenAI can change the underlying weights at any time. The mitigation is the evaluator-critic, not the LLM itself, but the evaluator is also an LLM and shares the failure mode.
 - **Adversarial input.** The refusal list is a substring check; an adversarial user can paraphrase past it. The mitigation is that the system is gated behind a clinician — it is not deployed to patients directly — but in a real deployment a stronger classifier-based input filter would be required.
 - **Knowledge base.** The KB is intentionally tiny and is not a substitute for an up-to-date guideline corpus (e.g. ACC/AHA, ESC). Replacing the four-file KB with a curated, versioned, regularly refreshed evidence base is a precondition for any non-educational use.
+- **Multiple comparisons.** nb01 reports a Bonferroni-corrected chi-square p-value, but per-slice AUCs in nb04 are point estimates without family-wise correction. They should be read as exploratory: small-n slices (sex=0 has ~20 rows) are noisy, and the sex=0 slice AUC of 1.00 is a sample-size artefact, not a strong claim.
 
 ## 7. Professional and industry relevance
 
-The architectural pattern here — a small, well-evaluated classical model plus a small RAG layer plus a structurally-guarded LLM explainer plus an evaluator-critic loop — is the same pattern currently being adopted across regulated industries beyond healthcare (legal, financial advisory, insurance). The reason is regulatory: regulators are converging on "the model output must be auditable, the evidence must be cite-able, the human must remain the locus of accountability" (NIST, 2023; European Parliament, 2024). A monolithic LLM cannot meet that bar; the multi-stage decomposition built here can. The transferable lesson: *the architecture is the safety story* — prompt-only safety does not survive contact with regulators or adversarial users.
+The architectural pattern here — a small, well-evaluated classical model plus a small RAG layer plus a structurally-guarded LLM explainer plus an evaluator-critic loop — is being adopted across regulated industries beyond healthcare (legal, financial advisory, insurance). The reason is regulatory convergence on "the model output must be auditable, the evidence must be cite-able, the human must remain the locus of accountability" (NIST, 2023; European Parliament, 2024). A monolithic LLM cannot meet that bar; the multi-stage decomposition built here can. The transferable lesson: *the architecture is the safety story* — prompt-only safety does not survive contact with regulators or adversarial users.
 
 ## 8. Future extensions
 
 - **Calibration layer** (Platt scaling or isotonic regression) on top of the ensemble probability before tier assignment.
-- **Bootstrap confidence intervals** on every reported metric in `notebooks/04_evaluation.ipynb`.
+- **Per-slice bootstrap CIs** extended to every subgroup metric (currently reported for aggregate AUC and as point estimates per slice).
 - **Real KB.** Replace the four-file synthetic KB with a versioned snapshot of a real guideline corpus, ingested via the existing sha256 manifest.
 - **Multi-arm refusal classifier** to replace the substring list, reducing false positives on legitimate paraphrases.
 - **Counterfactual explanation.** Surface the smallest feature change that would move the patient out of the high tier, drawing on the SHAP / DiCE family of methods.
@@ -86,7 +87,7 @@ The architectural pattern here — a small, well-evaluated classical model plus 
 
 ## 9. Conclusion
 
-The integrated system meets the rubric's letter — five prior projects integrated, RAG + agent loop + ensemble + per-slice evaluation + structural safety — but the more important point is the discipline behind the integration. Every component was rebuilt from scratch under a single set of constraints (auditability, citation, refusal-before-LLM, run logging), and every constraint was demonstrated with a live, persisted transcript. That is the form an industry-pattern AI system has to take when it is deployed inside a regulated workflow: not a single brilliant model, but a set of small, individually-testable components whose composition produces a behaviour a regulator can sign off on.
+The integrated system meets the rubric's letter — five prior projects integrated, RAG + agent loop + ensemble + per-slice evaluation + structural safety — but the more important point is the discipline behind the integration. Every component was rebuilt under one set of constraints (auditability, citation, refusal-before-LLM, run logging), and every constraint was demonstrated with a live, persisted transcript. That is the form an industry-pattern AI system has to take inside a regulated workflow: not a single brilliant model, but a set of small, individually-testable components whose composition produces a behaviour a regulator can sign off on.
 
 ---
 
