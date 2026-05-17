@@ -36,9 +36,7 @@ The rubric for the Integrated AI System capstone requires integration of at leas
 | **P5 — Generative AI (VAE)** | Generative-output domain; the lesson that generative models need *structural* mitigations, not prompt pleas: under-claim capability, mandatory disclaimer, citation-only grounding. The LLM explainer is itself a generative model; P5's discipline shapes how it is constrained. | `src/genai_explainer.py` |
 | **P6 — Agentic AI (research-brief agent)** | Plan → retrieve → synthesise → evaluate → revise loop; ChromaDB + OpenAI embeddings; INSUFFICIENT EVIDENCE escape valve; substring refusal list; runtime caps; sha256 ingest manifest; JSONL run log | `src/rag/`, `src/agent_orchestrator.py`, `src/safeguards.py` |
 
-These projects chain. P3's HGB and P4's MLP feed P6's ensemble; the disagreement flag is what makes P5's explainer call for human review on borderline cases. P2's per-sex bias finding propagates into the model card P6's RAG retrieves, so the disclosure appears in the explanation a clinician reads.
-
-Critically, the integration is not stylistic: the per-sex performance gap that appeared in both ML and DL is acknowledged in the model card retrieved at explanation time, so the disclosure surfaces in the actual explanation a clinician reads.
+These projects chain. P3's HGB and P4's MLP feed P6's ensemble; the disagreement flag is what makes P5's explainer call for human review on borderline cases. P2's per-sex bias finding from both ML and DL is written into the model card chunk available to P6's RAG, so the disclosure is retrievable at explanation time when the user query touches model performance.
 
 ## 4. Technical design decisions and tradeoffs
 
