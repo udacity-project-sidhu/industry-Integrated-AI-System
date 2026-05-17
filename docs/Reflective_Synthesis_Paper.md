@@ -8,9 +8,9 @@
 
 ## 1. Industry context
 
-Cardiovascular disease (CVD) remains the leading global cause of death, accounting for roughly 17.9 million deaths a year — almost a third of all deaths worldwide (WHO, 2021a). A large fraction of these events are downstream of a small set of modifiable risk factors — hypertension, dyslipidaemia, smoking, diabetes, obesity — whose population-level contribution is documented in the Global Burden of Disease analysis (Roth et al., 2020). Many also occur in patients who enter the healthcare system but are not triaged with the urgency their underlying risk warrants. The bottleneck is bedside cognitive bandwidth: clinicians at the front door see hundreds of patients a shift, and mis-prioritising one is asymmetric — a missed acute coronary case is catastrophic, an over-investigated low-risk patient merely inefficient.
+Cardiovascular disease (CVD) remains the leading global cause of death — roughly 17.9 million deaths a year, almost a third of all deaths worldwide (WHO, 2021a). A large fraction are downstream of a small set of modifiable risk factors — hypertension, dyslipidaemia, smoking, diabetes, obesity — whose population-level contribution is documented in the Global Burden of Disease analysis (Roth et al., 2020). Many also occur in patients who enter the healthcare system but are not triaged with the urgency their underlying risk warrants. The bottleneck is bedside cognitive bandwidth: clinicians at the front door see hundreds of patients a shift, and mis-prioritising one is asymmetric — a missed acute coronary case is catastrophic, an over-investigated low-risk patient merely inefficient.
 
-AI in healthcare also faces sector-specific constraints: protected health information governance, FDA oversight of clinical decision support as Software as a Medical Device (U.S. FDA, 2021), and the clinician-as-locus-of-accountability norm that makes deferral, not autonomy, the design target for any clinical AI (WHO, 2021b). The opportunity is not to replace clinical judgement but to surface a structured, evidence-grounded summary of risk a clinician can accept, reject, or interrogate in seconds. The system is a clinical-triage explainer that takes a single patient's tabular features, returns a calibrated probability, retrieves supporting evidence from a small clinical knowledge base, and produces a citation-bearing explanation under explicit guardrails.
+AI in healthcare also faces sector-specific constraints: protected health information governance, FDA oversight of clinical decision support as Software as a Medical Device (U.S. FDA, 2021), and the clinician-as-locus-of-accountability norm that makes deferral, not autonomy, the design target (WHO, 2021b). The opportunity is not to replace clinical judgement but to surface a structured, evidence-grounded summary of risk a clinician can accept, reject, or interrogate in seconds. The system is a clinical-triage explainer that takes a single patient's tabular features, returns a calibrated probability, retrieves supporting evidence from a small clinical knowledge base, and produces a citation-bearing explanation under explicit guardrails.
 
 ## 2. Overview of the integrated solution
 
@@ -33,10 +33,10 @@ The rubric for the Integrated AI System capstone requires integration of at leas
 | **P2 — Data and Statistical Reasoning** | Initial Data Analysis discipline; chi-square / Cramer's V; explicit limitations and bias section | `notebooks/01_data_exploration.ipynb`, the limitations sections of every component |
 | **P3 — Machine Learning (RFM clustering)** | scikit-learn `Pipeline` + `ColumnTransformer`; `log1p` for skewed numerics; per-slice metric reporting | `src/preprocessing.py`, `src/ml_model.py` |
 | **P4 — Deep Learning (CNN with dropout)** | Fixed-seed PyTorch training loop, dropout regularisation, *disaggregated* per-slice evaluation rather than headline accuracy | `src/dl_model.py`, slice tables in `src/evaluation.py` |
-| **P5 — Generative AI (VAE)** | Responsible-framing of generative output: under-claim capability, structural mitigations baked into the prompt, mandatory disclaimer as the final line | `src/genai_explainer.py` |
+| **P5 — Generative AI (VAE)** | Generative-output domain; the lesson that generative models need *structural* mitigations, not prompt pleas: under-claim capability, mandatory disclaimer, citation-only grounding. The LLM explainer is itself a generative model; P5's discipline shapes how it is constrained. | `src/genai_explainer.py` |
 | **P6 — Agentic AI (research-brief agent)** | Plan → retrieve → synthesise → evaluate → revise loop; ChromaDB + OpenAI embeddings; INSUFFICIENT EVIDENCE escape valve; substring refusal list; runtime caps; sha256 ingest manifest; JSONL run log | `src/rag/`, `src/agent_orchestrator.py`, `src/safeguards.py` |
 
-These projects chain. P3's HGB and P4's MLP feed P6's ensemble, whose disagreement flag is what makes P5's explainer call for human review on borderline cases. P2's per-sex bias finding propagates into the model card P6's RAG layer retrieves, so the disclosure appears inline in the explanation a clinician reads.
+These projects chain. P3's HGB and P4's MLP feed P6's ensemble; the disagreement flag is what makes P5's explainer call for human review on borderline cases. P2's per-sex bias finding propagates into the model card P6's RAG retrieves, so the disclosure appears in the explanation a clinician reads.
 
 Critically, the integration is not stylistic: the per-sex performance gap that appeared in both ML and DL is acknowledged in the model card retrieved at explanation time, so the disclosure surfaces in the actual explanation a clinician reads.
 
@@ -57,7 +57,7 @@ Critically, the integration is not stylistic: the per-sex performance gap that a
 The system has been built with explicit, *structural* mitigations rather than prompt-level pleas. A short audit:
 
 - **Scope refusal at the input layer.** Banned request types never reach the LLM, regardless of phrasing.
-- **Citation discipline at the output layer.** The explanation prompt enforces five hard rules including verbatim score quoting and `[S?]` citations. The Phase J faithfulness check across three live runs found *zero invalid citations* and 36–44% explanation/evidence token overlap.
+- **Citation discipline at the output layer.** The explanation prompt enforces five hard rules including verbatim score quoting and `[S?]` citations to retrieved evidence. Manual inspection of `docs/transcripts/` shows every `[S?]` marker maps to a retrieved chunk.
 - **Mandatory disclaimer.** Every non-refusal explanation ends with "Educational artifact only. Not for clinical use. The clinician is the locus of accountability for any decision."
 - **Confidence surfacing.** When ML and DL disagree, the explanation explicitly recommends human review.
 - **Audit trail.** Every step of every run is persisted to `outputs/run_log.jsonl` and to a human-readable transcript.
@@ -72,7 +72,7 @@ The system did meet its stated goal: a citation-bearing, refusal-aware triage ex
 - **Dataset.** UCI Heart Disease is small (303 rows), thirty years old, from four hospitals, and skewed male. Headline metrics on the 61-row test set are reported with 95% bootstrap CIs (1000 resamples) in nb04 alongside a plain LogisticRegression baseline, and the bands are wide enough that the gradient-boosting model overlaps the baseline. The system has no claim to clinical validity outside this benchmark.
 - **Calibration.** Brier scores are good (≤0.09) but top failure-case analysis showed both models being most confident exactly when wrong on a handful of rows. The ensemble disagreement flag is the only structural mitigation.
 - **Generative drift.** The LLM is a closed-weights API; OpenAI can change weights at any time. The evaluator-critic is the mitigation, but it is also an LLM and shares the failure mode.
-- **Adversarial input.** The refusal list is a substring check; an adversarial user can paraphrase past it. Mitigation: the system is gated behind a clinician; a stronger classifier-based input filter would be required for direct deployment.
+- **Adversarial input.** The refusal list is a substring check; users can paraphrase past it. The system is gated behind a clinician; a stronger classifier-based input filter would be required for direct deployment.
 - **Knowledge base.** The KB is intentionally tiny and is not a substitute for an up-to-date guideline corpus (e.g. ACC/AHA, ESC). A curated, versioned, refreshed evidence base is a precondition for any non-educational use.
 - **Multiple comparisons.** nb01 reports a Bonferroni-corrected chi-square p-value, but per-slice AUCs in nb04 are point estimates without family-wise correction. They are exploratory: small-n slices (sex=0 has ~20 rows) are noisy, and the sex=0 AUC of 1.00 is a sample-size artefact.
 
@@ -92,10 +92,10 @@ The integrated system meets the rubric's letter — five prior projects integrat
 
 ## References
 
-- European Parliament. (2024). *Regulation (EU) 2024/1689 of the European Parliament and of the Council laying down harmonised rules on artificial intelligence (Artificial Intelligence Act).* Official Journal of the European Union.
+- European Parliament. (2024). *Regulation (EU) 2024/1689 of the European Parliament and of the Council laying down harmonised rules on artificial intelligence (Artificial Intelligence Act).* Official Journal of the European Union. https://eur-lex.europa.eu/eli/reg/2024/1689/oj
 - Janosi, A., Steinbrunn, W., Pfisterer, M., & Detrano, R. (1988). *Heart Disease* [Data set]. UCI Machine Learning Repository. https://doi.org/10.24432/C52P4X
-- National Institute of Standards and Technology. (2023). *Artificial Intelligence Risk Management Framework (AI RMF 1.0)* (NIST AI 100-1). U.S. Department of Commerce.
+- National Institute of Standards and Technology. (2023). *Artificial Intelligence Risk Management Framework (AI RMF 1.0)* (NIST AI 100-1). U.S. Department of Commerce. https://doi.org/10.6028/NIST.AI.100-1
 - Roth, G. A., Mensah, G. A., Johnson, C. O., Addolorato, G., Ammirati, E., Baddour, L. M., … Fuster, V. (2020). Global burden of cardiovascular diseases and risk factors, 1990–2019: Update from the GBD 2019 study. *Journal of the American College of Cardiology*, 76(25), 2982–3021. https://doi.org/10.1016/j.jacc.2020.11.010
-- U.S. Food and Drug Administration. (2021). *Artificial Intelligence/Machine Learning (AI/ML)-Based Software as a Medical Device (SaMD) Action Plan.*
+- U.S. Food and Drug Administration. (2021). *Artificial Intelligence/Machine Learning (AI/ML)-Based Software as a Medical Device (SaMD) Action Plan.* https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-and-machine-learning-software-medical-device
 - World Health Organization. (2021a). *Cardiovascular diseases (CVDs) — fact sheet.* https://www.who.int/news-room/fact-sheets/detail/cardiovascular-diseases-(cvds)
-- World Health Organization. (2021b). *Ethics and governance of artificial intelligence for health: WHO guidance.*
+- World Health Organization. (2021b). *Ethics and governance of artificial intelligence for health: WHO guidance.* https://www.who.int/publications/i/item/9789240029200
