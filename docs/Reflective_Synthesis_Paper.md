@@ -57,8 +57,8 @@ Critically, the integration is not stylistic: the per-sex performance gap that a
 The system has been built with explicit, *structural* mitigations rather than prompt-level pleas. A short audit:
 
 - **Scope refusal at the input layer.** Banned request types never reach the LLM, regardless of phrasing.
-- **Citation discipline at the output layer.** The explanation prompt enforces five hard rules including verbatim score quoting and `[S?]` citations to retrieved evidence. Manual inspection of `docs/transcripts/` shows every `[S?]` marker maps to a retrieved chunk.
-- **Mandatory disclaimer.** Every non-refusal explanation ends with "Educational artifact only. Not for clinical use. The clinician is the locus of accountability for any decision."
+- **Citation discipline at the output layer.** The explanation prompt enforces five hard rules including verbatim score quoting and `[S?]` citations. The Phase J faithfulness check in nb04 across three live runs found *zero invalid citations* and 37–45% explanation/evidence token overlap.
+- **Mandatory disclaimer.** Every non-refusal explanation ends with "Educational artifact only. Not for clinical use. The clinician is the locus of accountability."
 - **Confidence surfacing.** When ML and DL disagree, the explanation explicitly recommends human review.
 - **Audit trail.** Every step of every run is persisted to `outputs/run_log.jsonl` and to a human-readable transcript.
 - **Disaggregated evaluation, disclosed.** The per-sex AUC gap (sex=0 → 1.00, sex=1 → 0.94 for ML; similar for DL) is reported in nb04 and surfaced in the retrieved model card.
