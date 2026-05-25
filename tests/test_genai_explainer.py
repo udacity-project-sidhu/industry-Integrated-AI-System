@@ -1,7 +1,20 @@
 """Smoke test for the RAG-grounded GenAI explainer.
 
+cd 'C:\Users\dev\sources\udacity\Project 7 - Industry-integrated AI System\Intgerated AI Systems'
+
+python -m pytest tests/test_genai_explainer.py
+
+python -m pytest tests/test_genai_explainer.py -s
+
+# or more verbose:
+python -m pytest tests/test_genai_explainer.py -s -v
+
 Hits the live OpenAI chat + embeddings API once.
 Skipped automatically if OPENAI_API_KEY is not set.
+
+--------------------------------------------------------------------------------
+
+See notes at the bottom of this file about what this function does.
 """
 from __future__ import annotations
 
@@ -58,3 +71,48 @@ def test_live_explanation():
     assert not result.is_refusal
     assert len(result.cited_indices) > 0
     assert "Not for clinical use" in result.text
+
+
+"""
+Smoke tests for genai_explainer.py — the RAG-grounded LLM explainer that turns a PatientScore plus retrieved knowledge-base chunks into a clinician-facing natural-language explanation. Two tests, one offline and one live.
+
+1. test_refuses_on_empty_evidence() — offline, always runs
+Hands the explainer a synthetic patient + score but zero retrieved chunks (retrieved=[]). Asserts:
+
+result.is_refusal is True,
+The text is exactly the canonical INSUFFICIENT_EVIDENCE string.
+This validates the fail-closed guardrail: if the RAG step returns nothing relevant, the explainer must refuse rather than invent content. This is the anti-hallucination front line — it never reaches the LLM at all in this path.
+
+2. test_live_explanation() — only runs if OPENAI_API_KEY is set
+End-to-end check of the real explanation pipeline (this is the test that costs money):
+
+Load + split the dataset, load the default ML/DL/preprocessor bundle.
+Pick a positive-class patient from the test set (so the explanation has substance to discuss).
+Compute the ensemble PatientScore for that patient.
+ingest() the knowledge base into Chroma (idempotent — no-op if already indexed).
+Build a query string from the patient's cardiac-relevant features (cp, thal, exang, oldpeak) and search() the vector store for top-4 chunks.
+Call explain(features, score, chunks) — this is the real OpenAI chat + embeddings round-trip.
+Print the explanation and citation metadata, then assert:
+Not a refusal,
+At least one citation was made (cited_indices non-empty → grounded in retrieved evidence),
+Mandatory "Not for clinical use" disclaimer is present.
+What it does NOT test
+Exact wording / quality of the explanation (LLMs are stochastic).
+The evaluator/critic loop or revision (that's test_agent_orchestrator.py).
+Numeric scoring (that's test_decision.py).
+Refusal prompts (banned-topic detection in safeguards.py — that's test_safeguards.py and the orchestrator test).
+Outputs
+Refusal test: pure pass/fail.
+Live test: prints the patient score, the full explanation text, cited chunk indices, and cited sources to the terminal (only visible with -s).
+No JSONL log here — that's the orchestrator's job. This isolates the explainer alone.
+Cost / time
+Refusal test: milliseconds, no network.
+Live test: one chat completion + a small embeddings call against OpenAI. Skipped cleanly when no key is configured, so it's safe to leave in the default test run.
+What this isolates
+This file pins down the explainer's two most important contracts:
+
+No evidence → refusal (it never tries to fabricate).
+Real evidence → grounded, cited, disclaimed output.
+Anything related to scoring, safeguards, or the critic loop is intentionally out of scope and tested elsewhere.
+
+"""

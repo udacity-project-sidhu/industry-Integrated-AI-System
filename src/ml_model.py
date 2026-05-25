@@ -1,9 +1,12 @@
 """Machine-learning risk model for the Heart Disease cohort.
 
 Lineage: scikit-learn `Pipeline` + scaling discipline is adapted from
-Project 3 (Machine Learning, UCI Online Retail II K-Means RFM). The
-implementation here is a fresh supervised binary classifier on tabular
-clinical features.
+Project 3 (Machine Learning, UCI Online Retail II K-Means RFM(Recency, Frequency, Monetary) 
+was a K-Means clustering on the UCI Online Retail II dataset, 
+where customers were grouped using those three RFM features (which need scaling before K-Means). 
+The current file borrows the Pipeline + scaler discipline from that work, but applies it to a 
+fresh supervised binary classifier on tabular clinical features instead — no RFM features are used here.
+
 """
 from __future__ import annotations
 
@@ -27,14 +30,21 @@ from .preprocessing import RANDOM_STATE, SplitData, build_preprocessor
 
 MODEL_PATH = settings.models_dir / "ml_model.joblib"
 
+# CV — Cross-Validation. Splits training data into folds, trains on some, evaluates on the held-out fold, rotates. 
+#      cv_roc_auc_mean / cv_roc_auc_std are the average and spread across folds.
+
+# K-Fold / Stratified K-Fold — CV scheme with K folds; stratified preserves the positive/negative class ratio in each fold.
+
+# HistGradientBoostingClassifier — scikit-learn's Histogram-based Gradient Boosting classifier. 
+#     Bins features into histograms for speed; an ensemble of boosted decision trees.
 
 @dataclass
 class MLMetrics:
-    cv_roc_auc_mean: float
-    cv_roc_auc_std: float
-    test_roc_auc: float
-    test_pr_auc: float
-    test_brier: float
+    cv_roc_auc_mean: float  # mean cross-validated ROC-AUC(Receiver Operating Characteristic – Area Under the Curve) on the training set
+    cv_roc_auc_std: float   # standard deviation of cross-validated ROC-AUC on the training set
+    test_roc_auc: float     # ROC-AUC on the test set
+    test_pr_auc: float      # Precision-Recall AUC on the test set
+    test_brier: float       # Brier score on the test set. Mean squared error between predicted probabilities and actual 0/1 outcomes.
 
 
 def build_model() -> Pipeline:

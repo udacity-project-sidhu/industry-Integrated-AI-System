@@ -1,4 +1,18 @@
-"""Phase J smoke tests for src/evaluation.py."""
+r"""Phase J smoke tests for src/evaluation.py.
+
+cd 'C:\Users\dev\sources\udacity\Project 7 - Industry-integrated AI System\Intgerated AI Systems'
+
+python -m pytest tests/test_evaluation.py
+
+python -m pytest tests/test_evaluation.py -s
+
+# or more verbose:
+python -m pytest tests/test_evaluation.py -s -v
+
+See notes at the bottom of this file about what this function does.
+--------------------------------------------------------------------------------
+
+"""
 from __future__ import annotations
 
 import numpy as np
@@ -81,3 +95,54 @@ if __name__ == "__main__":
     test_failure_cases_returns_topk()
     test_rag_faithfulness_valid_and_invalid()
     print("ok")
+
+
+"""
+Unit tests for evaluation.py — the offline evaluation toolkit used by notebooks 04/05 to report aggregate metrics, fairness slices, failure cases, and RAG faithfulness. Unlike the other test files, this one uses synthetic data, so it's fast, deterministic, and exercises the math directly.
+
+Five tests
+1. test_aggregate_metrics_basic — headline metrics
+Generates synthetic labels + correlated probabilities (seeded RNG), runs aggregate_metrics, and asserts:
+
+n matches input size,
+roc_auc is better than chance (> 0.5),
+brier is a valid probability score (0 ≤ brier ≤ 1).
+Validates the AggregateMetrics dataclass returns coherent values.
+
+2. test_slice_table_returns_per_group — fairness slices
+Builds three random groups (a/b/c) and confirms slice_table:
+
+Returns one row per group,
+Has the expected columns: n, positive_rate, roc_auc, brier.
+This is the per-cohort disaggregation used to detect hidden failures across subgroups (sex, age band, etc.).
+
+3. test_age_bucket_boundaries — bucketing edge cases
+Tests the age_bucket() helper at exact boundary values: <45 | 45–54 | 55–64 | ≥65. Catches off-by-one errors at the cutpoints — e.g. confirms 45 lands in 45-54 (not <45), and 65 lands in >=65.
+
+4. test_failure_cases_returns_topk — highest-confidence wrongs
+Feeds hand-crafted probs where some are very confidently wrong (e.g. 0.95 predicted but label is 0). Asserts:
+
+Top-k length matches,
+Results are sorted by confidence descending (the most embarrassing misses come first).
+These are the rows you'd surface in a model card under "where the model fails badly" — a calibration smell.
+
+5. test_rag_faithfulness_valid_and_invalid — citation grounding
+Fakes two retrieved chunks and an explanation that cites [S1], [S2], and (deliberately) a non-existent [S5]. Asserts rag_faithfulness reports:
+
+cited_indices == [1, 2] — what was referenced,
+invalid_citation_indices == [5] — citation to a chunk that doesn't exist (hallucinated reference),
+uncited_chunks_count == 0 — every retrieved chunk was used,
+explanation_token_overlap > 0 — explanation vocabulary overlaps the evidence.
+This is the offline counterpart to the LLM judge — a cheap, deterministic check that the explainer isn't fabricating citations.
+
+What it does NOT test
+Actual models, RAG ingestion, or LLM calls (no network, no API key).
+Real-data metrics — only synthetic.
+Cost / time
+Milliseconds. Fully offline, deterministic (seeded), no models trained, no files written. The fastest test in the suite.
+
+Why this matters
+Notebook 04 (the evaluation notebook) leans on these functions to produce the model card numbers and the fairness/faithfulness tables. If any of these helpers silently break, your reported metrics become wrong — this file is the guardrail.
+
+
+"""

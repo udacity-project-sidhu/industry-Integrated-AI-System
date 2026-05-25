@@ -3,6 +3,9 @@
 Runs every step of the pipeline in dependency order. Idempotent and safe to
 re-run - see the resilience notes in README.md.
 
+Make sure to run this from the project root (where pyproject.toml lives) 
+"Integrated AI Systems" folder
+so the `src` module can be found.
 Usage:
     python run_all.py            # full run
     python run_all.py --skip-train   # reuse existing model artifacts

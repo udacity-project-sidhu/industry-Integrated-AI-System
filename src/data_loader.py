@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from .config import settings
+from .config import settings # dot is used for relative path pointing to current direct
 
 RAW_CSV = settings.data_raw / "heart_disease.csv"
 UCI_HEART_DISEASE_ID = 45
@@ -30,12 +30,14 @@ def load_heart_disease(force_refresh: bool = False) -> pd.DataFrame:
     if RAW_CSV.exists() and not force_refresh:
         return pd.read_csv(RAW_CSV)
 
+    # Local file not found, fetch from UCI ML Repo and cache to disk for next time.
     from ucimlrepo import fetch_ucirepo
 
     repo = fetch_ucirepo(id=UCI_HEART_DISEASE_ID)
-    features = repo.data.features
-    targets = repo.data.targets
+    features = repo.data.features    # pandas DataFrame: the X columns
+    targets = repo.data.targets      # pandas Series: the y column (0..4 original severity labels)
 
+    # Two steps: rejoin the X and y the loader handed back separately, then derive a clean binary label from the original multi-class severity score.
     df = pd.concat([features, targets], axis=1)
     if "num" in df.columns:
         df["target"] = (df["num"] > 0).astype(int)

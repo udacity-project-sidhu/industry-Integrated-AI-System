@@ -1,4 +1,56 @@
-"""Smoke test for the decision/ensemble layer."""
+r"""Smoke test for the decision/ensemble layer.
+
+cd 'C:\Users\dev\sources\udacity\Project 7 - Industry-integrated AI System\Intgerated AI Systems'
+
+python -m pytest tests/test_decision.py
+
+python -m pytest tests/test_decision.py -s
+
+# or more verbose:
+python -m pytest tests/test_decision.py -s -v
+
+--------------------------------------------------------------------------------
+
+A smoke test for the ensemble decision layer (decision.py), which sits between the two raw models (ML + DL) and the agent/explainer.
+
+What the decision layer does
+Ensembles the ML and DL probabilities into one ensemble_prob.
+Maps that probability to a risk tier: low / moderate / high (threshold-based).
+Flags confidence: high if the two models agree (within tolerance), low if they diverge — so a clinician knows when to distrust the ensemble.
+What the test does
+One test function: test_score_patient_and_cohort().
+
+Loads & splits the Heart Disease data.
+Trains both models from scratch:
+ML pipeline (train_ml) → saved to disk.
+DL net (train_dl, 10 epochs — short on purpose for speed) → saved with its input_dim.
+score_patient — single-row path: takes one test patient, runs it through both models + the ensemble, and asserts:
+ensemble_prob is a valid probability (0.0 ≤ p ≤ 1.0)
+tier ∈ {low, moderate, high}
+confidence ∈ {high, low}
+score_cohort — batch path: scores the entire test set and asserts:
+One row per input patient (no row loss).
+All tier labels come from the allowed set.
+What it does NOT test
+Numerical correctness of the ensemble (just bounds and labels).
+Threshold values themselves (low / moderate / high cutoffs).
+The agreement tolerance for the confidence flag.
+Calibration, accuracy, or model quality.
+Any LLM / RAG / safeguards behavior.
+
+What it does NOT test
+Numerical correctness of the ensemble (just bounds and labels).
+Threshold values themselves (low / moderate / high cutoffs).
+The agreement tolerance for the confidence flag.
+Calibration, accuracy, or model quality.
+Any LLM / RAG / safeguards behavior.
+Outputs
+Pure pass/fail asserts — no prints, no log file. Just verifies the plumbing is wired so downstream code (the orchestrator, evaluation notebooks, scoring scripts) can rely on the decision API's shape and value ranges.
+
+Cost / time
+Offline but not cheap — it trains a fresh ML model and a 10-epoch DL model on every run. Takes seconds, not milliseconds. No OpenAI key needed.
+
+"""
 from __future__ import annotations
 
 from src.data_loader import load_heart_disease
