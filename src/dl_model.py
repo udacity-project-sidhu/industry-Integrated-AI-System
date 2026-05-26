@@ -1,7 +1,16 @@
 """Deep-learning risk model for the Heart Disease cohort.
 
-A small PyTorch MLP that consumes the same preprocessed tabular features
-as the gradient-boosting baseline and predicts the binary disease label.
+PyTorch deep-learning risk model — a counterpart to the gradient-boosting ml_model.py. 
+Both consume the same preprocessed tabular features so their probabilities can be ensembled
+ predicts the binary disease label.
+
+A small tabular MLP (no CNN here despite the P4 lineage):
+Linear(input_dim → 64) → ReLU → Dropout(0.3)
+Linear(64 → 64)        → ReLU → Dropout(0.3)
+Linear(64 → 1)         → logit
+
+Trained with BCEWithLogitsLoss + Adam (lr=1e-3, weight_decay=1e-4) for 80 epochs, batch size 32. 
+Sigmoid is applied only at inference, not inside forward.
 
 Lineage: the training-loop discipline (fixed seed, deterministic init,
 dropout regularization, per-epoch loss/accuracy logging, per-slice

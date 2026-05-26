@@ -1,4 +1,4 @@
-"""Save an agent `RunResult` as a human-readable markdown transcript."""
+"""Save an agent `RunResult` as a human-readable markdown transcript for auditing."""
 from __future__ import annotations
 
 import json

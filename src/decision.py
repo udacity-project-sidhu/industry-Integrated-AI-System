@@ -1,10 +1,20 @@
 """Ensemble + risk-tier decision layer.
 
-Combines the gradient-boosting and PyTorch MLP risk scorers into a single
-structured payload that the agent orchestrator passes to the GenAI
-explainer. Reporting all three scores (ml, dl, ensemble) keeps the
-downstream explanation auditable — the LLM cites the numbers it was
-actually given, not a single opaque score.
+Combines two model scores into one decision payload. 
+It runs the gradient-boosting (ml_model) and PyTorch MLP (dl_model) scorers on a patient, 
+then computes a weighted-average ensemble_prob (default 50/50).
+
+Assigns a risk tier. _tier() buckets the ensemble probability into low (<0.30), 
+moderate (0.30–0.70), or high (≥0.70). The wide moderate band is intentional — borderline patients 
+get routed to human review.
+
+Flags confidence based on model agreement. If |ml_prob − dl_prob| ≤ 0.20, confidence is "high"; 
+otherwise "low". This is what lets the downstream agent surface "the two models disagree" to the clinician.
+
+Returns all three probabilities, not just the ensemble. The PatientScore dataclass 
+carries ml_prob, dl_prob, ensemble_prob, tier, confidence, and the thresholds used — 
+so the LLM explainer cites the actual numbers and the decision stays auditable.
+
 
 Lineage: P3 — "report cohort sizes alongside the metric" discipline,
 applied here as "report all component scores alongside the ensemble".
