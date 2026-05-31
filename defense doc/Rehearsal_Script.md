@@ -37,15 +37,19 @@
 - Five projects integrated (≥3 required).
 - Code rebuilt from scratch; what is reused is *patterns and design discipline*, not source files.
 
-## Slide 5 — Demo 1: happy path (5:00, 2:00)
+## Slide 5 — Demo 1: high risk, self-corrected (5:00, 2:00)
 - Open `notebooks/05_integrated_pipeline.ipynb` *or* read `transcripts/demo1_happy_path.md`.
-- Show: tier = high, citation-bearing explanation, mandatory disclaimer, evaluator passed after one bounded revision.
-- Note: evaluator runs on a *different* LLM snapshot (`gpt-4o`) than the explainer (`gpt-4o-mini`) — not rubber-stamping itself.
+- High-risk patient: `ml_prob 0.990` vs `dl_prob 0.610` → |Δ| = 0.38 → ensemble 0.800, tier = **high**, confidence = **low**.
+- First draft made an ungrounded clinical claim (`thalach` 156 "above age-predicted maximum") — no retrieved chunk supports it.
+- Evaluator (`gpt-4o`) caught it, scored 7/10, listed 3 issues, issued revision instructions; explainer (`gpt-4o-mini`) produced a hedged, grounded rewrite in one bounded revision.
+- Defense point: evaluator is a *different* LLM than the explainer — not rubber-stamping itself — and the revision cap prevents loops.
 
-## Slide 6 — Demo 2: low confidence (7:00, 2:00)
-- ML 0.97 vs DL 0.62 → ensemble agreement gate flips confidence to **low**.
-- Evaluator caught real issue in first draft; one bounded revision (cap = 1) fixed it.
-- Key point: this is **structural** mitigation — disagreement check in decision layer, evaluator in orchestrator, revision cap as runtime constant. None of it lives in the prompt.
+## Slide 6 — Demo 2: borderline tier, format discipline (7:00, 2:00)
+- Borderline patient: `ml_prob 0.825` vs `dl_prob 0.336` → |Δ| = 0.49 → ensemble 0.581, tier = **moderate**, confidence = **low**.
+- System refuses to commit to a tier-as-decision: final text says *"unable to commit to a tier as a decision; human review recommended"*.
+- First draft failed evaluator on **format discipline** (missing inline citations; model scores not quoted verbatim) — not on clinical content.
+- One bounded revision (cap = 1) fixes it; the system does not loop indefinitely.
+- Key point: every safety check — disagreement gate, citation check, verbatim-score rule, revision cap — lives in code, not in the prompt.
 
 ## Slide 7 — Demo 3: refusal (9:00, 1:00)
 - Request: "prescribe… dosage".
@@ -57,7 +61,7 @@
 - 95% bootstrap CIs alongside a LogisticRegression baseline → bands overlap, so I am **not** overselling gradient boosting.
 - Per-sex slice gap appears in **both** models → data-driven, not model-driven; disclosed in the retrieved model card.
 - Top failure cases largely shared between ML and DL — also a data signal.
-- RAG faithfulness across 3 live runs: **zero** invalid citations, 36–44 % explanation/evidence token overlap.
+- RAG faithfulness across 3 live runs: **zero** invalid citations, 37–45 % explanation/evidence token overlap.
 
 ## Slide 9 — Ethics & responsible AI (11:30, 1:30)
 Five structural mitigations:
